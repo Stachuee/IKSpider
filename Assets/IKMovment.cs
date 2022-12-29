@@ -12,8 +12,11 @@ public class IKMovment : MonoBehaviour
         //Local space
         public Vector3 destination;
         public Vector3 root;
+        [HideInInspector]
+        public Vector3 translatedRoot;
         public Vector3 desiredPos;
-
+        [HideInInspector]
+        public Vector3 translatedDesiredPos;
 
         [HideInInspector]
         public Vector3 desirePosInWorld;
@@ -69,6 +72,7 @@ public class IKMovment : MonoBehaviour
         input = input.magnitude > 1 ? input.normalized : input;
         spider.position += input * speed * Time.deltaTime;
 
+        TranslatePoitns();
         MoveLegsTargetPosition();
         MoveBodyTargetPosition();
         CalculateIK();
@@ -83,14 +87,14 @@ public class IKMovment : MonoBehaviour
             legs[legNumber].bones = new Vector3[legs[legNumber].bonesLength.Length + 1];
             legs[legNumber].segments = new Transform[legs[legNumber].bonesLength.Length];
 
-            Vector3 dir = (legs[legNumber].destination - legs[legNumber].root).normalized;
+            Vector3 dir = (legs[legNumber].destination - legs[legNumber].translatedRoot).normalized;
             //Debug.Log(legs[legNumber].bones[legNumber]);
-            legs[legNumber].bones[0] = legs[legNumber].root;
+            legs[legNumber].bones[0] = legs[legNumber].translatedRoot;
             Vector3 dist = Vector3.zero;
 
             for (int i = 1; i < legs[legNumber].bones.Length; i++)
             {
-                legs[legNumber].bones[i] = legs[legNumber].root + dir * legs[legNumber].bonesLength[i - 1] + dist;
+                legs[legNumber].bones[i] = legs[legNumber].translatedRoot + dir * legs[legNumber].bonesLength[i - 1] + dist;
                 dist += dir * legs[legNumber].bonesLength[i - 1];
             }
             legs[legNumber].allLength = dist.magnitude;
@@ -103,22 +107,32 @@ public class IKMovment : MonoBehaviour
         }
         
     }
+
+    private void TranslatePoitns()
+    {
+        for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
+        {
+            legs[legNumber].translatedDesiredPos = spider.TransformPoint(legs[legNumber].desiredPos) - spider.position;
+            legs[legNumber].translatedRoot = spider.TransformPoint(legs[legNumber].root) - spider.position;
+        }
+    }
+
     private void MoveLegsTargetPosition()
     {
         for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
         {
-            Vector3 nextStep = (legs[legNumber].desiredPos + spider.position) - legs[legNumber].desirePosInWorld;
+            Vector3 nextStep = (legs[legNumber].translatedDesiredPos + spider.position) - legs[legNumber].desirePosInWorld;
             nextStep = nextStep.normalized * legs[legNumber].maxAcceptableLegDistanceFromDesire;
             Vector3 normailzedMovment = new Vector3(Mathf.Abs(movmentAxis.x), Mathf.Abs(movmentAxis.y), Mathf.Abs(movmentAxis.z)).normalized;
-            nextStep = legs[legNumber].desiredPos + Vector3.Scale(nextStep, normailzedMovment); ; //new Vector3(nextStep.x * normailzedMovment.x, nextStep.y * normailzedMovment.y, nextStep.z * normailzedMovment.z);
+            nextStep = legs[legNumber].translatedDesiredPos + Vector3.Scale(nextStep, normailzedMovment); ; //new Vector3(nextStep.x * normailzedMovment.x, nextStep.y * normailzedMovment.y, nextStep.z * normailzedMovment.z);
             nextStep = nextStep + spider.position;
 
-            Debug.DrawLine(nextStep , nextStep + spider.up, Color.red);
+            Debug.DrawLine(nextStep, nextStep + spider.up, Color.red);
 
 
             RaycastHit hit;
             Vector3 posFromCenterOfSphere = Vector3.positiveInfinity;
-            if (Physics.Raycast(legs[legNumber].desiredPos + spider.position, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
+            if (Physics.Raycast(legs[legNumber].translatedDesiredPos + spider.position, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
             {
                 posFromCenterOfSphere = hit.point;
             }
@@ -126,7 +140,7 @@ public class IKMovment : MonoBehaviour
             if (posFromCenterOfSphere != Vector3.positiveInfinity)
             if (Physics.Raycast(nextStep, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity)) //legs[legNumber].desiredPos + spider.position
             {
-                if (Vector3.Distance(new Vector3(legs[legNumber].desirePosInWorld.x, legs[legNumber].desirePosInWorld.z), new Vector3(posFromCenterOfSphere.x, posFromCenterOfSphere.z)) > legs[legNumber].maxAcceptableLegDistanceFromDesire || legs[legNumber].allLength < Vector3.Distance(legs[legNumber].root, legs[legNumber].desirePosInWorld - spider.position))
+                if (Vector3.Distance(new Vector3(legs[legNumber].desirePosInWorld.x, legs[legNumber].desirePosInWorld.z), new Vector3(posFromCenterOfSphere.x, posFromCenterOfSphere.z)) > legs[legNumber].maxAcceptableLegDistanceFromDesire || legs[legNumber].allLength < Vector3.Distance(legs[legNumber].translatedRoot, legs[legNumber].desirePosInWorld - spider.position))
                 {
                     legs[legNumber].desirePosInWorld = hit.point;
                 }
@@ -172,15 +186,15 @@ public class IKMovment : MonoBehaviour
     {
         for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenaia wykonywane s¹ dla ka¿dej nogi osobno
         {
-            //  Jeœli odleg³oœæ od celu jest wiêksza ni¿ d³ugoœæ nogi obliczamy kierunek w którym powinna byæ wyci¹gniêta a nastêpnie ustawiamy koœci prosto w kierunku celu z wyj¹tkiem pierwszej, która jest rootem
-            if (Vector3.Magnitude(legs[legNumber].destination - legs[legNumber].root) > legs[legNumber].allLength) 
+            //  Jeœli odleg³oœæ od celu jest wiêksza ni¿ d³ugoœæ nogi obliczamy kierunek w którym powinna byæ wyci¹gniêta a nastêpnie ustawiamy koœci prosto w kierunku celu z wyj¹tkiem pierwszej, która jest translatedRootem
+            if (Vector3.Magnitude((legs[legNumber].desirePosInWorld - spider.position) - legs[legNumber].translatedRoot) > legs[legNumber].allLength) 
             {
-                Vector3 dir = (legs[legNumber].destination - legs[legNumber].root).normalized;
+                Vector3 dir = ((legs[legNumber].desirePosInWorld - spider.position) - legs[legNumber].translatedRoot).normalized;
                 Vector3 dist = Vector3.zero;
 
                 for(int bone = 1; bone < legs[legNumber].bones.Length; bone++)
                 {
-                    legs[legNumber].bones[bone] = legs[legNumber].root + dir * legs[legNumber].bonesLength[bone - 1] + dist;
+                    legs[legNumber].bones[bone] = legs[legNumber].translatedRoot + dir * legs[legNumber].bonesLength[bone - 1] + dist;
                     dist += dir * legs[legNumber].bonesLength[bone - 1];
                 }
 
@@ -197,14 +211,14 @@ public class IKMovment : MonoBehaviour
                     }
 
                     
-                    legs[legNumber].bones[0] = legs[legNumber].root;
+                    legs[legNumber].bones[0] = legs[legNumber].translatedRoot;
 
                     for (int boneIndex = 1; boneIndex < legs[legNumber].bones.Length - 1; boneIndex++) // forward
                     {
                         legs[legNumber].bones[boneIndex] = legs[legNumber].bones[boneIndex - 1] + (legs[legNumber].bones[boneIndex] - legs[legNumber].bones[boneIndex - 1]).normalized * legs[legNumber].bonesLength[boneIndex - 1];
                     }
 
-                    if (Vector3.Distance(legs[legNumber].bones[legs[legNumber].bones.Length - 1], legs[legNumber].destination) < delta) break;
+                    if (Vector3.Distance(legs[legNumber].bones[legs[legNumber].bones.Length - 1], (legs[legNumber].desirePosInWorld - spider.position)) < delta) break;
 
                 }
             }
@@ -229,7 +243,7 @@ public class IKMovment : MonoBehaviour
         for (int legNumber = 0; legNumber < legs.Length; legNumber++)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawSphere(legs[legNumber].root + spider.position, 0.2f);
+            Gizmos.DrawSphere(legs[legNumber].translatedRoot + spider.position, 0.2f);
 
             Gizmos.color = Color.blue;
             Gizmos.DrawSphere(legs[legNumber].destination + spider.position, 0.1f);
@@ -251,9 +265,9 @@ public class IKMovment : MonoBehaviour
             Gizmos.color = Color.cyan;
 
             RaycastHit hit;
-            if (Physics.Raycast(legs[legNumber].desiredPos + spider.position, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
+            if (Physics.Raycast(legs[legNumber].translatedDesiredPos + spider.position, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
             {
-                Gizmos.DrawLine(legs[legNumber].desiredPos + spider.position, hit.point);
+                Gizmos.DrawLine(legs[legNumber].translatedDesiredPos + spider.position, hit.point);
                 Gizmos.DrawWireSphere(hit.point, legs[legNumber].maxAcceptableLegDistanceFromDesire);
 
             }
