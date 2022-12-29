@@ -121,14 +121,6 @@ public class IKMovment : MonoBehaviour
     {
         for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
         {
-            Vector3 nextStep = (legs[legNumber].translatedDesiredPos + spider.position) - legs[legNumber].desirePosInWorld;
-            nextStep = nextStep.normalized * legs[legNumber].maxAcceptableLegDistanceFromDesire;
-            Vector3 normailzedMovment = new Vector3(Mathf.Abs(movmentAxis.x), Mathf.Abs(movmentAxis.y), Mathf.Abs(movmentAxis.z)).normalized;
-            nextStep = legs[legNumber].translatedDesiredPos + Vector3.Scale(nextStep, normailzedMovment); ; //new Vector3(nextStep.x * normailzedMovment.x, nextStep.y * normailzedMovment.y, nextStep.z * normailzedMovment.z);
-            nextStep = nextStep + spider.position;
-
-            Debug.DrawLine(nextStep, nextStep + spider.up, Color.red);
-
 
             RaycastHit hit;
             Vector3 posFromCenterOfSphere = Vector3.positiveInfinity;
@@ -137,14 +129,30 @@ public class IKMovment : MonoBehaviour
                 posFromCenterOfSphere = hit.point;
             }
 
-            if (posFromCenterOfSphere != Vector3.positiveInfinity)
-            if (Physics.Raycast(nextStep, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity)) //legs[legNumber].desiredPos + spider.position
-            {
-                if (Vector3.Distance(new Vector3(legs[legNumber].desirePosInWorld.x, legs[legNumber].desirePosInWorld.z), new Vector3(posFromCenterOfSphere.x, posFromCenterOfSphere.z)) > legs[legNumber].maxAcceptableLegDistanceFromDesire || legs[legNumber].allLength < Vector3.Distance(legs[legNumber].translatedRoot, legs[legNumber].desirePosInWorld - spider.position))
-                {
-                    legs[legNumber].desirePosInWorld = hit.point;
-                }
 
+            Vector3 nextStep = posFromCenterOfSphere - legs[legNumber].desirePosInWorld;
+            nextStep = nextStep.normalized * legs[legNumber].maxAcceptableLegDistanceFromDesire * 0.5f;
+            Vector3 normailzedMovment = new Vector3(Mathf.Abs(movmentAxis.x), Mathf.Abs(movmentAxis.y), Mathf.Abs(movmentAxis.z)).normalized;
+            nextStep = legs[legNumber].translatedDesiredPos + Vector3.Scale(nextStep, normailzedMovment); ; //new Vector3(nextStep.x * normailzedMovment.x, nextStep.y * normailzedMovment.y, nextStep.z * normailzedMovment.z);
+            nextStep = nextStep + spider.position;
+
+            Debug.DrawLine(nextStep, nextStep + spider.up, Color.red);
+
+
+            if (Vector3.Distance(legs[legNumber].desirePosInWorld, posFromCenterOfSphere) > legs[legNumber].maxAcceptableLegDistanceFromDesire 
+                || legs[legNumber].allLength < Vector3.Distance(legs[legNumber].translatedRoot, legs[legNumber].desirePosInWorld - spider.position)
+                || Vector3.Distance(legs[legNumber].translatedDesiredPos, hit.point) < desireHeigth * 0.5f)
+            {
+                if (posFromCenterOfSphere != Vector3.positiveInfinity)
+                {
+                    if (Physics.Raycast(nextStep, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity)) //legs[legNumber].desiredPos + spider.position
+                    {
+                        if(Vector3.Distance(hit.point, legs[legNumber].translatedRoot + spider.position) <= legs[legNumber].allLength)
+                        {
+                            legs[legNumber].desirePosInWorld = hit.point;
+                        }
+                    }
+                }
             }
         }
     }
@@ -268,6 +276,7 @@ public class IKMovment : MonoBehaviour
             if (Physics.Raycast(legs[legNumber].translatedDesiredPos + spider.position, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
             {
                 Gizmos.DrawLine(legs[legNumber].translatedDesiredPos + spider.position, hit.point);
+                Gizmos.DrawSphere(legs[legNumber].translatedDesiredPos + spider.position, 0.1f);
                 Gizmos.DrawWireSphere(hit.point, legs[legNumber].maxAcceptableLegDistanceFromDesire);
 
             }
