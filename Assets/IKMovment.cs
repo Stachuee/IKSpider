@@ -7,19 +7,12 @@ using UnityEngine;
 public class IKMovment : MonoBehaviour
 {
     [System.Serializable]
-    public enum LegSidePosition { Left, Right }
-    [System.Serializable]
-    public enum LegFrontPosition { Front, Back }
-
-    [System.Serializable]
     struct Leg
     {
         //Local space
         public Vector3 destination;
         public Vector3 root;
         public Vector3 desiredPos;
-        public LegSidePosition legSide;
-        public LegFrontPosition legFront;
 
 
         [HideInInspector]
@@ -58,6 +51,8 @@ public class IKMovment : MonoBehaviour
     [SerializeField]
     float desireHeigth;
 
+    Vector3 movmentAxis;
+
     private void Awake()
     {
         Innit();
@@ -67,6 +62,8 @@ public class IKMovment : MonoBehaviour
     {
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
+
+        movmentAxis = spider.forward * vertical + spider.right * horizontal;
 
         Vector3 input = spider.forward * vertical + spider.right * horizontal;
         input = input.magnitude > 1 ? input.normalized : input;
@@ -105,41 +102,31 @@ public class IKMovment : MonoBehaviour
             }
         }
         
-        //legs[0].bones = new Vector3[legs[0].bonesLength.Length + 1];
-        //legs[1].bones = new Vector3[legs[1].bonesLength.Length + 1];
-
-
-        //Vector3 dirLeft = (legs[0].destination - legs[0].root).normalized;
-        //Vector3 dirRight = (legs[1].destination - legs[1].root).normalized;
-
-        //legs[0].bones[0] = legs[0].root;
-        //legs[1].bones[0] = legs[1].root;
-
-        //Vector3 dist = Vector3.zero;
-        //for (int i = 1; i < legs[0].bones.Length; i++)
-        //{
-        //    legs[0].bones[i] = legs[0].root + dirLeft * legs[0].bonesLength[i - 1] + dist;
-        //    dist += dirLeft * legs[0].bonesLength[i - 1];
-        //}
-        //legs[0].allLength = dist.magnitude;
-
-        //dist = Vector3.zero;
-        //for (int i = 1; i < legs[0].bones.Length; i++)
-        //{
-        //    legs[1].bones[i] = legs[1].root + dirRight * legs[1].bonesLength[i - 1] + dist;
-        //    dist += dirRight * legs[1].bonesLength[i - 1];
-        //}
-        //legs[1].allLength = dist.magnitude;
     }
     private void MoveLegsTargetPosition()
     {
         for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
         {
-            RaycastHit hit;
+            Vector3 nextStep = (legs[legNumber].desiredPos + spider.position) - legs[legNumber].desirePosInWorld;
+            nextStep = nextStep.normalized * legs[legNumber].maxAcceptableLegDistanceFromDesire;
+            Vector3 normailzedMovment = new Vector3(Mathf.Abs(movmentAxis.x), Mathf.Abs(movmentAxis.y), Mathf.Abs(movmentAxis.z)).normalized;
+            nextStep = legs[legNumber].desiredPos + Vector3.Scale(nextStep, normailzedMovment); ; //new Vector3(nextStep.x * normailzedMovment.x, nextStep.y * normailzedMovment.y, nextStep.z * normailzedMovment.z);
+            nextStep = nextStep + spider.position;
 
+            Debug.DrawLine(nextStep , nextStep + spider.up, Color.red);
+
+
+            RaycastHit hit;
+            Vector3 posFromCenterOfSphere = Vector3.positiveInfinity;
             if (Physics.Raycast(legs[legNumber].desiredPos + spider.position, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
-            {   
-                if(Vector3.Distance(legs[legNumber].desirePosInWorld, hit.point) > legs[legNumber].maxAcceptableLegDistanceFromDesire)
+            {
+                posFromCenterOfSphere = hit.point;
+            }
+
+            if (posFromCenterOfSphere != Vector3.positiveInfinity)
+            if (Physics.Raycast(nextStep, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity)) //legs[legNumber].desiredPos + spider.position
+            {
+                if (Vector3.Distance(new Vector3(legs[legNumber].desirePosInWorld.x, legs[legNumber].desirePosInWorld.z), new Vector3(posFromCenterOfSphere.x, posFromCenterOfSphere.z)) > legs[legNumber].maxAcceptableLegDistanceFromDesire || legs[legNumber].allLength < Vector3.Distance(legs[legNumber].root, legs[legNumber].desirePosInWorld - spider.position))
                 {
                     legs[legNumber].desirePosInWorld = hit.point;
                 }
@@ -150,47 +137,40 @@ public class IKMovment : MonoBehaviour
 
     private void MoveBodyTargetPosition()
     {
-        float heigth = 0;
-
-        int leftCount = 0;
-        Vector3 leftSideHeigth = Vector3.zero;
-        int rightCount = 0;
-        Vector3 rightSideHeigth = Vector3.zero;
-        int frontCount = 0;
-        Vector3 frontHeigth = Vector3.zero;
-        int backCount = 0;
-        Vector3 backHeigth = Vector3.zero;
+        Vector3 heigth = Vector3.zero;
+        Vector3 rotation = Vector3.zero;
 
         for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
         {
-            Vector3 myHeigth = (spider.position - legs[legNumber].desirePosInWorld);
-            myHeigth = new Vector3(myHeigth.x, desireHeigth - myHeigth.y, myHeigth.z);
-            heigth += myHeigth.y;
+            Vector3 down = -spider.up;
+            Vector3 myHeigth = Vector3.Project(spider.position - legs[legNumber].desirePosInWorld, spider.up);
+            heigth += myHeigth;
+            Debug.DrawLine(legs[legNumber].desirePosInWorld, myHeigth + legs[legNumber].desirePosInWorld, Color.magenta);
 
-            //float myHeigth = desireHeigth - (spider.position - legs[legNumber].desirePosInWorld).y;
-            //heigth += myHeigth;
+            #region rotatnion
+            Vector3 firstLeg = legs[legNumber + 2 > legs.Length - 1 ? legNumber + 2 - legs.Length : legNumber + 2].desirePosInWorld;
+            Vector3 secondLeg = legs[legNumber + 1 > legs.Length - 1 ? 0 : legNumber + 1].desirePosInWorld;
+            Vector3 thirdLeg = legs[legNumber].desirePosInWorld;
+            Vector3 vectorUp = Vector3.Cross(secondLeg - firstLeg, thirdLeg - firstLeg);
+            rotation += vectorUp.normalized;
 
-            if (legs[legNumber].legSide == LegSidePosition.Left) { leftSideHeigth += myHeigth; leftCount++; }
-            else if (legs[legNumber].legSide == LegSidePosition.Right) { rightSideHeigth += myHeigth; rightCount++; }
-            if (legs[legNumber].legFront == LegFrontPosition.Front) { frontHeigth += myHeigth; frontCount++; }
-            else if (legs[legNumber].legFront == LegFrontPosition.Back) { backHeigth += myHeigth;  backCount++; }
-
+            //Debug.DrawLine(firstLeg, firstLeg + vectorUp.normalized * 1, Color.green);
+            #endregion
         }
-        
+
         heigth /= legs.Length;
+        rotation = (rotation / legs.Length).normalized;
+        float heightScalar = desireHeigth - heigth.magnitude;
 
-        leftSideHeigth /= leftCount;
-        rightSideHeigth /= rightCount;
-        backHeigth /= backCount;
-        frontHeigth /= frontCount;
-
-        
-        spider.position += new Vector3(0, heigth, 0);
+        //Debug.DrawLine(spider.position, spider.position + rotation, Color.green);
+        Debug.DrawLine(spider.position, spider.up * heightScalar + spider.position, Color.magenta);
+        spider.position += spider.up * heightScalar;
+        spider.up = rotation;
     }
 
     private void CalculateIK()
     {
-        for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
+        for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenaia wykonywane s¹ dla ka¿dej nogi osobno
         {
             //  Jeœli odleg³oœæ od celu jest wiêksza ni¿ d³ugoœæ nogi obliczamy kierunek w którym powinna byæ wyci¹gniêta a nastêpnie ustawiamy koœci prosto w kierunku celu z wyj¹tkiem pierwszej, która jest rootem
             if (Vector3.Magnitude(legs[legNumber].destination - legs[legNumber].root) > legs[legNumber].allLength) 
@@ -270,7 +250,13 @@ public class IKMovment : MonoBehaviour
 
             Gizmos.color = Color.cyan;
 
-            Gizmos.DrawLine(legs[legNumber].desiredPos + spider.position, legs[legNumber].desiredPos + spider.position - new Vector3(0,2,0));
+            RaycastHit hit;
+            if (Physics.Raycast(legs[legNumber].desiredPos + spider.position, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
+            {
+                Gizmos.DrawLine(legs[legNumber].desiredPos + spider.position, hit.point);
+                Gizmos.DrawWireSphere(hit.point, legs[legNumber].maxAcceptableLegDistanceFromDesire);
+
+            }
         }
 
       
