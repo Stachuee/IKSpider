@@ -56,6 +56,13 @@ public class IKMovment : MonoBehaviour
 
     Vector3 movmentAxis;
 
+    Vector3 desiredRotation;
+    Vector3 desiredPosition;
+
+
+    public float smoothTime = 0.05F;
+    private Vector3 velocity = Vector3.zero;
+
     private void Awake()
     {
         Innit();
@@ -75,6 +82,8 @@ public class IKMovment : MonoBehaviour
         TranslatePoitns();
         MoveLegsTargetPosition();
         MoveBodyTargetPosition();
+        spider.up = Vector3.SmoothDamp(spider.up, desiredRotation, ref velocity, smoothTime);
+        spider.position = Vector3.SmoothDamp(spider.position, desiredPosition, ref velocity, smoothTime);
         CalculateIK();
         AnimateLegs();
     }
@@ -186,8 +195,8 @@ public class IKMovment : MonoBehaviour
 
         Debug.DrawLine(spider.position, spider.position + rotation, Color.green);
         Debug.DrawLine(spider.position, spider.up * heightScalar + spider.position, Color.magenta);
-        spider.position += spider.up * heightScalar;
-        spider.up = rotation;
+        desiredPosition = spider.position + spider.up * heightScalar;
+        desiredRotation = rotation;
     }
 
     private void CalculateIK()
