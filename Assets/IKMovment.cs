@@ -145,7 +145,7 @@ public class IKMovment : MonoBehaviour
             Vector3 down = -spider.up;
             Vector3 myHeigth = Vector3.Project(spider.position - legs[legNumber].desirePosInWorld, spider.up);
             heigth += myHeigth;
-            Debug.DrawLine(legs[legNumber].desirePosInWorld, myHeigth + legs[legNumber].desirePosInWorld, Color.magenta);
+           // Debug.DrawLine(legs[legNumber].desirePosInWorld, myHeigth + legs[legNumber].desirePosInWorld, Color.magenta);
 
             #region rotatnion
             Vector3 firstLeg = legs[legNumber + 2 > legs.Length - 1 ? legNumber + 2 - legs.Length : legNumber + 2].desirePosInWorld;
@@ -154,7 +154,7 @@ public class IKMovment : MonoBehaviour
             Vector3 vectorUp = Vector3.Cross(secondLeg - firstLeg, thirdLeg - firstLeg);
             rotation += vectorUp.normalized;
 
-            //Debug.DrawLine(firstLeg, firstLeg + vectorUp.normalized * 1, Color.green);
+            // Debug.DrawLine(firstLeg, firstLeg + vectorUp.normalized * 1, Color.green);
             #endregion
         }
 
@@ -162,7 +162,7 @@ public class IKMovment : MonoBehaviour
         rotation = (rotation / legs.Length).normalized;
         float heightScalar = desireHeigth - heigth.magnitude;
 
-        //Debug.DrawLine(spider.position, spider.position + rotation, Color.green);
+        Debug.DrawLine(spider.position, spider.position + rotation, Color.green);
         Debug.DrawLine(spider.position, spider.up * heightScalar + spider.position, Color.magenta);
         spider.position += spider.up * heightScalar;
         spider.up = rotation;
