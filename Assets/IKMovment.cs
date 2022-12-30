@@ -36,6 +36,8 @@ public class IKMovment : MonoBehaviour
 
     [SerializeField]
     Transform spider;
+    [SerializeField]
+    Transform turret;
 
     [SerializeField]
     GameObject segmentPrefab;
@@ -75,7 +77,11 @@ public class IKMovment : MonoBehaviour
 
         movmentAxis = spider.forward * vertical + spider.right * horizontal;
 
-        Vector3 input = spider.forward * vertical + spider.right * horizontal;
+        Vector3 forwardMoveDirection = Vector3.Project(turret.forward, Vector3.ProjectOnPlane(turret.forward, spider.up).normalized).normalized;
+        Vector3 rightMoveDirection = Vector3.Project(turret.right, Vector3.ProjectOnPlane(turret.right, spider.up).normalized).normalized;
+
+
+        Vector3 input = forwardMoveDirection * vertical + rightMoveDirection * horizontal;
         input = input.magnitude > 1 ? input.normalized : input;
         spider.position += input * speed * Time.deltaTime;
 

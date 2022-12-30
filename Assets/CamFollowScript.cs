@@ -11,7 +11,7 @@ public class CamFollowScript : MonoBehaviour
 
     private void Update()
     {
-        transform.position = turret.position + camOffset.x * -turret.forward;// + camOffset.x * -turret.forward + new Vector3(0,camOffset.y,0);
-        transform.rotation = Quaternion.LookRotation(turret.position - transform.position, turret.up);
+        transform.position = turret.position + camOffset.x * -turret.forward + camOffset.y * turret.up;
+        transform.rotation = Quaternion.LookRotation((turret.position + camOffset.y * turret.up) - transform.position, turret.up);
     }
 }

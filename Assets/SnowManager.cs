@@ -5,25 +5,29 @@ using UnityEngine;
 
 public class SnowManager : MonoBehaviour
 {
-    List<MeshRenderer> chunkMeshes;
+    Texture2D snow;
 
     [SerializeField]
-    int2 mapChunkSize;
-    [SerializeField]
-    int2 chunkSize;
-    [SerializeField]
-    GameObject plane;
+    int2 mapSize;
 
+    [SerializeField]
+    Material mat;
 
-    private void Start()
+    private void Awake()
     {
-        for(int y = 0; y < mapChunkSize.y; y++)
+        snow = new Texture2D(mapSize.x, mapSize.y);
+
+        for(int y =0; y < mapSize.y; y++)
         {
-            for (int x = 0; x < mapChunkSize.x; x++)
+            for (int x = 0; x < mapSize.y; x++)
             {
-                Instantiate(plane, new Vector3(x * chunkSize.x, 0, y * chunkSize.y), Quaternion.identity);
+                snow.SetPixel(x, y, Color.white);
             }
         }
     }
 
+    private void Update()
+    {
+        mat.SetTexture("_Deformation", snow);
+    }
 }
