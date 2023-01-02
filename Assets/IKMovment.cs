@@ -61,6 +61,8 @@ public class IKMovment : MonoBehaviour
     Vector3 desiredRotation;
     Vector3 desiredPosition;
 
+    Vector3 rayCastLeanOffset;
+
 
     public float smoothTime = 0.05F;
     private Vector3 velocity = Vector3.zero;
@@ -165,17 +167,30 @@ public class IKMovment : MonoBehaviour
                         if(Vector3.Distance(hit.point, legs[legNumber].translatedRoot + spider.position) <= legs[legNumber].allLength)
                         {
                             legs[legNumber].desirePosInWorld = hit.point;
+                            continue;
                         }
+                    }
+                }
+                if(Physics.Raycast(nextStep, (spider.TransformDirection(Vector3.down) + rayCastLeanOffset), out hit, Mathf.Infinity))
+                {
+                    if (Vector3.Distance(hit.point, legs[legNumber].translatedRoot + spider.position) <= legs[legNumber].allLength)
+                    {
+                        legs[legNumber].desirePosInWorld = hit.point;
+                        continue;
                     }
                 }
             }
         }
     }
 
+    [SerializeField]
+    [Range(0, 1)]
+    float leanInfluence;
     private void MoveBodyTargetPosition()
     {
         Vector3 heigth = Vector3.zero;
         Vector3 rotation = Vector3.zero;
+        Vector3 rotationLean = Vector3.zero;
 
         for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
         {
@@ -191,16 +206,22 @@ public class IKMovment : MonoBehaviour
             Vector3 vectorUp = Vector3.Cross(secondLeg - firstLeg, thirdLeg - firstLeg);
             rotation += vectorUp.normalized;
 
+            rotationLean += spider.position - legs[legNumber].desirePosInWorld;
+
             // Debug.DrawLine(firstLeg, firstLeg + vectorUp.normalized * 1, Color.green);
             #endregion
         }
 
         heigth /= legs.Length;
         rotation = (rotation / legs.Length).normalized;
+        rotationLean = -(rotationLean / legs.Length).normalized;
         float heightScalar = desireHeigth - heigth.magnitude;
 
         Debug.DrawLine(spider.position, spider.position + rotation, Color.green);
         Debug.DrawLine(spider.position, spider.up * heightScalar + spider.position, Color.magenta);
+        Debug.DrawLine(spider.position, spider.position + rotationLean, Color.yellow);
+
+        rayCastLeanOffset = rotationLean;
         desiredPosition = spider.position + spider.up * heightScalar;
         desiredRotation = rotation;
     }

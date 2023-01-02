@@ -30,10 +30,11 @@ public class BulletScript : MonoBehaviour
 
 
         transform.position += (transform.forward * speed + gravity) * Time.deltaTime;
-        //transform.rotation = Quaternion.LookRotation(); //rotate bullet
+        transform.rotation = Quaternion.LookRotation(transform.position - prevPos);
         RaycastHit hit;
         if (Physics.Linecast(prevPos, transform.position, out hit))
         {
+            if (hit.transform.GetComponent<Target>() != null) Destroy(hit.transform.gameObject);
             Explode(hit.point);
             Destroy(gameObject);
         }

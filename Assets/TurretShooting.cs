@@ -19,7 +19,7 @@ public class TurretShooting : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetMouseButtonDown(0) && delayRemain < 0)
+        if(Input.GetMouseButton(0) && delayRemain < 0)
         {
             delayRemain = delayBetweenShots;
             Instantiate(bulletPrefab, barrel.position, Quaternion.LookRotation(barrel.position - turret.position, turret.up));

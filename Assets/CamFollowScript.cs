@@ -7,11 +7,11 @@ public class CamFollowScript : MonoBehaviour
     [SerializeField]
     Transform turret;
     [SerializeField]
-    Vector2 camOffset;
+    Vector3 camOffset;
 
     private void Update()
     {
-        transform.position = turret.position + camOffset.x * -turret.forward + camOffset.y * turret.up;
-        transform.rotation = Quaternion.LookRotation((turret.position + camOffset.y * turret.up) - transform.position, turret.up);
+        transform.position = turret.position + camOffset.x * -turret.forward + camOffset.y * turret.up + camOffset.z * turret.right;
+        transform.rotation = Quaternion.LookRotation((turret.position + camOffset.y * turret.up + camOffset.z * turret.right) - transform.position, turret.up);
     }
 }
