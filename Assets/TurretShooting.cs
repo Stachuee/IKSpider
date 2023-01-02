@@ -16,6 +16,19 @@ public class TurretShooting : MonoBehaviour
     float delayBetweenShots;
     float delayRemain;
 
+    [SerializeField]
+    Renderer vision;
+    bool vison;
+
+    [SerializeField]
+    Renderer barrelMat;
+
+    [SerializeField]
+    float heatDispersionPerSecond;
+    [SerializeField]
+    float heatGenerationPerShot;
+    float heat;
+
 
     private void Update()
     {
@@ -23,8 +36,24 @@ public class TurretShooting : MonoBehaviour
         {
             delayRemain = delayBetweenShots;
             Instantiate(bulletPrefab, barrel.position, Quaternion.LookRotation(barrel.position - turret.position, turret.up));
+            heat += heatGenerationPerShot;
+        }
+        if(Input.GetKeyDown(KeyCode.N))
+        {
+            if(vison)
+            {
+                vision.material.SetFloat("_Thermal", 0);
+            }
+            else
+            {
+                vision.material.SetFloat("_Thermal", 1);
+            }
+            vison = !vison;
+
         }
         delayRemain -= Time.deltaTime;
+        heat = Mathf.Clamp(heat - heatDispersionPerSecond * Time.deltaTime, 0, 1);
+        barrelMat.material.SetFloat("_HeatLevel", heat);
     }
 
 }
