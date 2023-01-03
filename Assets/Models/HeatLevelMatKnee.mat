@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: HeatLevelMatDown
+  m_Name: HeatLevelMatKnee
   m_Shader: {fileID: -6465566751694194690, guid: 69d17e4f72092374a858a4f2f81b6f23,
     type: 3}
   m_ValidKeywords: []
@@ -35,7 +35,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _HeatSprite:
-        m_Texture: {fileID: 2800000, guid: c21c1141b26a1fe4fac0504b476e0b99, type: 3}
+        m_Texture: {fileID: 2800000, guid: 1d3375368d1106f46b0fe38c67fa68ec, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SampleTexture2D_052d26579e9a44f8a1521f4e0a4a9ead_Texture_1:

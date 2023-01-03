@@ -29,6 +29,10 @@ public class IKMovment : MonoBehaviour
         [HideInInspector]
         public Transform[] segments;
         [HideInInspector]
+        public Transform[] knees;
+        [HideInInspector]
+        public Transform feet;
+        [HideInInspector]
         public Vector3[] bones;
         [HideInInspector]
         public float allLength;
@@ -54,6 +58,10 @@ public class IKMovment : MonoBehaviour
 
     [SerializeField]
     GameObject segmentPrefab;
+    [SerializeField]
+    GameObject kneePrefab;
+    [SerializeField]
+    GameObject footPrefab;
 
     [SerializeField]
     Leg[] legs;
@@ -95,6 +103,7 @@ public class IKMovment : MonoBehaviour
     float heatDispersePerSecond;
     float heat;
 
+    List<SegmentHeat> legsParts = new List<SegmentHeat>();
     private void Awake()
     {
         Innit();
@@ -126,6 +135,7 @@ public class IKMovment : MonoBehaviour
 
         heat = Mathf.Clamp(heat + (movmentAxis.magnitude * heatPerSecond - heatDispersePerSecond) * Time.deltaTime , 0, 1);
         body.material.SetFloat("_HeatLevel", heat);
+        legsParts.ForEach(x => x.UpdateHeat(heat));
     }
 
 
@@ -135,6 +145,7 @@ public class IKMovment : MonoBehaviour
         {
             legs[legNumber].bones = new Vector3[legs[legNumber].bonesLength.Length + 1];
             legs[legNumber].segments = new Transform[legs[legNumber].bonesLength.Length];
+            legs[legNumber].knees = new Transform[legs[legNumber].bonesLength.Length];
 
             Vector3 dir = -spider.up;
             //Debug.Log(legs[legNumber].bones[legNumber]);
@@ -151,12 +162,26 @@ public class IKMovment : MonoBehaviour
             for(int i = 0; i < legs[legNumber].bonesLength.Length; i++)
             {
                 GameObject temp = Instantiate(segmentPrefab, transform.position, quaternion.identity);
+                legsParts.Add(temp.GetComponent<SegmentHeat>());
                 legs[legNumber].segments[i] = temp.transform;
                 legs[legNumber].startPosition = legs[legNumber].bones[i] + spider.position;
                 legs[legNumber].desirePosInWorld = legs[legNumber].bones[i] + spider.position;
             }
+
+            for (int i = 0; i < legs[legNumber].bonesLength.Length; i++)
+            {
+                GameObject temp = Instantiate(kneePrefab, transform.position, quaternion.identity);
+                legsParts.Add(temp.GetComponent<SegmentHeat>());
+                legs[legNumber].knees[i] = temp.transform;
+            }
+
+            GameObject tempFeet = Instantiate(footPrefab, transform.position, quaternion.identity);
+            legsParts.Add(tempFeet.GetComponent<SegmentHeat>());
+            legs[legNumber].feet = tempFeet.transform;
+
+
         }
-        
+
     }
 
     private void TranslatePoitns()
@@ -338,6 +363,14 @@ public class IKMovment : MonoBehaviour
                 legs[legNumber].segments[i].position = legs[legNumber].bones[i] + spider.position;
                 legs[legNumber].segments[i].rotation = Quaternion.LookRotation((legs[legNumber].bones[i] - legs[legNumber].bones[i + 1]), Vector3.up);
             }
+
+            for (int i = 0; i < legs[legNumber].segments.Length; i++)
+            {
+                legs[legNumber].knees[i].position = legs[legNumber].bones[i] + spider.position;
+            }
+
+            legs[legNumber].feet.position = legs[legNumber].bones[legs[legNumber].segments.Length] + spider.position;
+            legs[legNumber].feet.rotation = Quaternion.LookRotation((legs[legNumber].bones[legs[legNumber].segments.Length - 1] - legs[legNumber].bones[legs[legNumber].segments.Length]), Vector3.up);
         }
     }
 

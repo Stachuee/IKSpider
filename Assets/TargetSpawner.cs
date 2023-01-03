@@ -15,6 +15,8 @@ public class TargetSpawner : MonoBehaviour
     [SerializeField]
     GameObject target;
 
+    float targets = 100;
+
     private void Start()
     {
         StartCoroutine("Spawn");
@@ -22,13 +24,13 @@ public class TargetSpawner : MonoBehaviour
 
     IEnumerator Spawn()
     {
-        while(true)
+        while(targets > 0)
         {
             yield return new WaitForSeconds(spawnDelay);
             Vector3 randomPos = Random.insideUnitSphere;
             Vector3 pos = new Vector3(randomPos.x, Mathf.Abs(randomPos.y), randomPos.z) * sphereRadius + middleOfArena;
             Instantiate(target, pos, Quaternion.LookRotation(pos - middleOfArena));
-
+            targets--;
         }
     }
 

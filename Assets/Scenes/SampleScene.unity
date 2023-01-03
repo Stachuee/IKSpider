@@ -1358,6 +1358,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1505289132}
     - target: {fileID: 1130840137, guid: 9e4d6e5eec19cab42ab99c5f7b968be5, type: 3}
+      propertyPath: forceDisperce
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 1130840137, guid: 9e4d6e5eec19cab42ab99c5f7b968be5, type: 3}
       propertyPath: heatGenerationPerShot
       value: 0.2
       objectReference: {fileID: 0}

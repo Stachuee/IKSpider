@@ -453,6 +453,10 @@ MonoBehaviour:
   turret: {fileID: 143831813}
   segmentPrefab: {fileID: 7071007640307186623, guid: f8ee07b164f4ba24aa1d611bea8d1905,
     type: 3}
+  kneePrefab: {fileID: 6848398343301224638, guid: afbe97679bfdaa84e9d2881bbad1f1f4,
+    type: 3}
+  footPrefab: {fileID: 5612753071505335335, guid: 54d983ce920e9ef43aec547b379171dd,
+    type: 3}
   legs:
   - destination: {x: 0.5, y: -2, z: -0.4}
     root: {x: 0.5, y: 0, z: -0.4}
@@ -465,6 +469,8 @@ MonoBehaviour:
     - 1
     - 1
     segments: []
+    knees: []
+    feet: {fileID: 0}
     bones: []
     allLength: 0
     currentPosition: {x: 0, y: 0, z: 0}
@@ -484,6 +490,8 @@ MonoBehaviour:
     - 1
     - 1
     segments: []
+    knees: []
+    feet: {fileID: 0}
     bones: []
     allLength: 0
     currentPosition: {x: 0, y: 0, z: 0}
@@ -503,6 +511,8 @@ MonoBehaviour:
     - 1
     - 1
     segments: []
+    knees: []
+    feet: {fileID: 0}
     bones: []
     allLength: 0
     currentPosition: {x: 0, y: 0, z: 0}
@@ -522,6 +532,8 @@ MonoBehaviour:
     - 1
     - 1
     segments: []
+    knees: []
+    feet: {fileID: 0}
     bones: []
     allLength: 0
     currentPosition: {x: 0, y: 0, z: 0}
@@ -581,6 +593,15 @@ MonoBehaviour:
   barrelMat: {fileID: 3534180995305936566}
   heatDispersionPerSecond: 0.3
   heatGenerationPerShot: 0.1
+  barrelHeatPrefab: {fileID: 617791294738765330, guid: 340f1229f733aa349881173690782630,
+    type: 3}
+  barrelsToAnimate:
+  - {fileID: 101717850717554481}
+  - {fileID: 2396128578694180313}
+  damping: 0.05
+  forceToAdd: 0.3
+  maxForce: 1
+  forceDisperce: 0
 --- !u!1 &7368474956654024475
 GameObject:
   m_ObjectHideFlags: 0
