@@ -23,13 +23,17 @@ public class TurretMovment : MonoBehaviour
     [SerializeField]
     LayerMask ignoreLayer;
 
+    [SerializeField]
+    Vector2 maxAngle;
+
     private void Update()
     {
+        if (!GameManager.gameManager.playerAlive) return;
         float axisX = Input.GetAxis("Mouse X") * sensitivity;
         float axisY = -Input.GetAxis("Mouse Y") * sensitivity;
 
         rotationX += axisX;
-        rotationY += axisY;
+        rotationY = Mathf.Clamp(rotationY + axisY, maxAngle.x, maxAngle.y);
 
         Vector3 newRotation = new Vector3(rotationY, rotationX, 0);
 

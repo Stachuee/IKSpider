@@ -103,26 +103,37 @@ public class IKMovment : MonoBehaviour
     float heatDispersePerSecond;
     float heat;
 
+    GameManager gameManager;
+
     List<SegmentHeat> legsParts = new List<SegmentHeat>();
     private void Awake()
     {
         Innit();
     }
 
+    private void Start()
+    {
+        gameManager = GameManager.gameManager;
+    }
+
     private void Update()
     {
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        float horizontal, vertical;
+        if (gameManager.playerAlive)
+        {
+            horizontal = Input.GetAxis("Horizontal");
+            vertical = Input.GetAxis("Vertical");
+            movmentAxis = spider.forward * vertical + spider.right * horizontal;
+            Vector3 forwardMoveDirection = Vector3.Project(turret.forward, Vector3.ProjectOnPlane(turret.forward, spider.up).normalized).normalized;
+            Vector3 rightMoveDirection = Vector3.Project(turret.right, Vector3.ProjectOnPlane(turret.right, spider.up).normalized).normalized;
 
-        movmentAxis = spider.forward * vertical + spider.right * horizontal;
 
-        Vector3 forwardMoveDirection = Vector3.Project(turret.forward, Vector3.ProjectOnPlane(turret.forward, spider.up).normalized).normalized;
-        Vector3 rightMoveDirection = Vector3.Project(turret.right, Vector3.ProjectOnPlane(turret.right, spider.up).normalized).normalized;
+            Vector3 input = forwardMoveDirection * vertical + rightMoveDirection * horizontal;
+            input = input.magnitude > 1 ? input.normalized : input;
+            spider.position += input * speed * Time.deltaTime;
+        }
 
-
-        Vector3 input = forwardMoveDirection * vertical + rightMoveDirection * horizontal;
-        input = input.magnitude > 1 ? input.normalized : input;
-        spider.position += input * speed * Time.deltaTime;
+      
 
         TranslatePoitns();
         MoveLegsTargetPosition();

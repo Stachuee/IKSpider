@@ -4,5 +4,9 @@ using UnityEngine;
 
 public class Target : MonoBehaviour
 {
-    
+    public void DestroyMe()
+    {
+        TargetCounter.destroyedTargets++;
+        Destroy(gameObject);
+    }
 }

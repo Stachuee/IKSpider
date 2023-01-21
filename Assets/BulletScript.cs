@@ -34,7 +34,11 @@ public class BulletScript : MonoBehaviour
         RaycastHit hit;
         if (Physics.Linecast(prevPos, transform.position, out hit))
         {
-            if (hit.transform.GetComponent<Target>() != null) Destroy(hit.transform.gameObject);
+            Target target = hit.transform.GetComponent<Target>();
+            if (target != null)
+            {
+                target.DestroyMe();
+            }
             Explode(hit.point);
             Destroy(gameObject);
         }

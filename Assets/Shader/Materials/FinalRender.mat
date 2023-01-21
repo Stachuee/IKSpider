@@ -55,7 +55,10 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Thermal: 0
-    m_Colors: []
+    - _TooFarFromTarget: 0
+    - _VisibilityOfTooFar: 0.1
+    m_Colors:
+    - _ColorOfTooFar: {r: 1, g: 0.73434687, b: 0, a: 0}
   m_BuildTextureStacks: []
 --- !u!114 &1537965271392398971
 MonoBehaviour:

@@ -56,7 +56,8 @@ public class TurretShooting : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetMouseButton(0) && delayRemain < 0)
+        if (!GameManager.gameManager.playerAlive) return;
+        if (Input.GetMouseButton(0) && delayRemain < 0)
         {
             delayRemain = delayBetweenShots;
             force = Mathf.Clamp(force + forceToAdd, 0, maxForce); 
