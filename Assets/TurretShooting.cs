@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.UI;
 
 public class TurretShooting : MonoBehaviour
 {
@@ -63,7 +64,13 @@ public class TurretShooting : MonoBehaviour
     Material glowMat;
     [SerializeField]
     float echoDuration;
+    [SerializeField]
+    float echoCooldown;
+    float echoCooldownRemain;
     bool echoOn;
+
+    [SerializeField]
+    Slider scanCD;
 
     float scanTime;
 
@@ -99,13 +106,16 @@ public class TurretShooting : MonoBehaviour
 
         }
 
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.Q) && echoCooldownRemain < 0)
         {
+            echoCooldownRemain = echoCooldown;
             StopAllCoroutines();
             StartCoroutine("SendPulse");
         }
 
         delayRemain -= Time.deltaTime;
+        echoCooldownRemain -= Time.deltaTime;
+        scanCD.value = (1 - echoCooldownRemain / echoCooldown);
 
         force -= force * forceDisperce;
         barrelsToAnimate.ForEach(x => x.localPosition = Vector3.SmoothDamp(x.localPosition, basePosition - -x.right * force, ref velocity, damping));

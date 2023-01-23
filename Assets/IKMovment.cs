@@ -130,7 +130,7 @@ public class IKMovment : MonoBehaviour
 
             Vector3 input = forwardMoveDirection * vertical + rightMoveDirection * horizontal;
             input = input.magnitude > 1 ? input.normalized : input;
-            spider.position += input * speed * Time.deltaTime;
+            if(input.magnitude > 0 && CheckIfCanMove(input.normalized)) spider.position += input * speed * Time.deltaTime;
         }
 
       
@@ -147,6 +147,19 @@ public class IKMovment : MonoBehaviour
         heat = Mathf.Clamp(heat + (movmentAxis.magnitude * heatPerSecond - heatDispersePerSecond) * Time.deltaTime , 0, 1);
         body.material.SetFloat("_HeatLevel", heat);
         legsParts.ForEach(x => x.UpdateHeat(heat));
+    }
+
+    [SerializeField]
+    float colliderRadius;
+    private bool CheckIfCanMove(Vector3 dir)
+    {
+        RaycastHit hit;
+        if(Physics.Raycast(spider.position, dir, out hit, colliderRadius))
+        {
+            return false;
+        }
+        Debug.DrawLine(spider.position, spider.position + dir * colliderRadius);
+        return true;
     }
 
 
