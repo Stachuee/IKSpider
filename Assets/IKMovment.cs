@@ -119,7 +119,7 @@ public class IKMovment : MonoBehaviour
     private void Update()
     {
         float horizontal, vertical;
-        if (gameManager.playerAlive)
+        if (gameManager.playerAlive && !gameManager.pause)
         {
             horizontal = Input.GetAxis("Horizontal");
             vertical = Input.GetAxis("Vertical");
@@ -218,7 +218,7 @@ public class IKMovment : MonoBehaviour
 
 
             Vector3 nextStep = posFromCenterOfSphere - legs[legNumber].desirePosInWorld;
-            nextStep = nextStep.normalized * legs[legNumber].maxAcceptableLegDistanceFromDesire * 0.5f;
+            nextStep = nextStep.normalized * legs[legNumber].maxAcceptableLegDistanceFromDesire * 0.7f;
             Vector3 normailzedMovment = new Vector3(Mathf.Abs(movmentAxis.x), Mathf.Abs(movmentAxis.y), Mathf.Abs(movmentAxis.z)).normalized;
             nextStep = legs[legNumber].translatedDesiredPos + Vector3.Scale(nextStep, normailzedMovment); ; //new Vector3(nextStep.x * normailzedMovment.x, nextStep.y * normailzedMovment.y, nextStep.z * normailzedMovment.z);
             nextStep = nextStep + spider.position;
@@ -334,8 +334,9 @@ public class IKMovment : MonoBehaviour
 
                 for(int bone = 1; bone < legs[legNumber].bones.Length; bone++)
                 {
-                    legs[legNumber].bones[bone] = legs[legNumber].translatedRoot + dir * legs[legNumber].bonesLength[bone - 1] + dist;
                     dist += dir * legs[legNumber].bonesLength[bone - 1];
+                    legs[legNumber].bones[bone] = legs[legNumber].translatedRoot + dir + dist;
+
                 }
 
             }

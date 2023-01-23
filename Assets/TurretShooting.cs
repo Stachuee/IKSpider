@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class TurretShooting : MonoBehaviour
 {
@@ -8,6 +9,8 @@ public class TurretShooting : MonoBehaviour
     Transform barrel;
     [SerializeField]
     Transform turret;
+    [SerializeField]
+    Transform spider;
     [SerializeField]
     GameObject bulletPrefab;
 
@@ -49,6 +52,22 @@ public class TurretShooting : MonoBehaviour
 
     Vector3 velocity = Vector3.zero;
 
+
+    [SerializeField]
+    ScriptableRendererFeature echo;
+    [SerializeField]
+    ScriptableRendererFeature glow;
+    [SerializeField]
+    Material echoMat;
+    [SerializeField]
+    Material glowMat;
+    [SerializeField]
+    float echoDuration;
+    bool echoOn;
+
+    float scanTime;
+
+
     private void Start()
     {
         basePosition = barrelsToAnimate[0].localPosition;
@@ -56,7 +75,7 @@ public class TurretShooting : MonoBehaviour
 
     private void Update()
     {
-        if (!GameManager.gameManager.playerAlive) return;
+        if (!GameManager.gameManager.playerAlive || GameManager.gameManager.pause) return;
         if (Input.GetMouseButton(0) && delayRemain < 0)
         {
             delayRemain = delayBetweenShots;
@@ -79,12 +98,36 @@ public class TurretShooting : MonoBehaviour
             vison = !vison;
 
         }
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            StopAllCoroutines();
+            StartCoroutine("SendPulse");
+        }
+
         delayRemain -= Time.deltaTime;
 
         force -= force * forceDisperce;
         barrelsToAnimate.ForEach(x => x.localPosition = Vector3.SmoothDamp(x.localPosition, basePosition - -x.right * force, ref velocity, damping));
         heat = Mathf.Clamp(heat - heatDispersionPerSecond * Time.deltaTime, 0, 1);
         barrelMat.material.SetFloat("_HeatLevel", heat);
+
+
+        echoMat.SetVector("_scanPostion", spider.position);
+        glowMat.SetVector("_scanPostion", spider.position);
+        echoMat.SetFloat("_ScanTime", scanTime);
+        glowMat.SetFloat("_ScanTime", scanTime);
+        scanTime += Time.deltaTime;
     }
 
+
+    IEnumerator SendPulse()
+    {
+        echo.SetActive(true);
+        glow.SetActive(true);
+        scanTime = 0;
+        yield return new WaitForSeconds(echoDuration);
+        glow.SetActive(false);
+        echo.SetActive(false);
+    }
 }

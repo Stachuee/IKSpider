@@ -28,7 +28,7 @@ public class TurretMovment : MonoBehaviour
 
     private void Update()
     {
-        if (!GameManager.gameManager.playerAlive) return;
+        if (!GameManager.gameManager.playerAlive || GameManager.gameManager.pause) return;
         float axisX = Input.GetAxis("Mouse X") * sensitivity;
         float axisY = -Input.GetAxis("Mouse Y") * sensitivity;
 

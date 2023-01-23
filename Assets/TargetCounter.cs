@@ -17,18 +17,19 @@ public class TargetCounter : MonoBehaviour
     public static int destroyedTargets;
 
 
-    public static float startTime;
+    public static float time;
 
     private void Start()
     {
         destroyedTargets = 0;
-        startTime = Time.time;
+        time = 0;
     }
 
     private void Update()
     {
         if (!GameManager.gameManager.playerAlive) return;
-        TimeSpan timeSpan = TimeSpan.FromSeconds(Time.time - startTime);
+        if (!GameManager.gameManager.pause) time += Time.deltaTime;
+        TimeSpan timeSpan = TimeSpan.FromSeconds(time);
         string timeText = string.Format("{0:D2}:{1:D2}:{2:D2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds);
         text.text = timeText;
 
