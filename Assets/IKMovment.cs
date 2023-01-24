@@ -124,13 +124,13 @@ public class IKMovment : MonoBehaviour
             horizontal = Input.GetAxis("Horizontal");
             vertical = Input.GetAxis("Vertical");
             movmentAxis = spider.forward * vertical + spider.right * horizontal;
-            Vector3 forwardMoveDirection = Vector3.Project(turret.forward, Vector3.ProjectOnPlane(turret.forward, spider.up).normalized).normalized;
-            Vector3 rightMoveDirection = Vector3.Project(turret.right, Vector3.ProjectOnPlane(turret.right, spider.up).normalized).normalized;
+            Vector3 forwardMoveDirection = Vector3.Project(turret.forward, Vector3.ProjectOnPlane(turret.forward, spider.up).normalized).normalized; // Get forward vector
+            Vector3 rightMoveDirection = Vector3.Project(turret.right, Vector3.ProjectOnPlane(turret.right, spider.up).normalized).normalized; // Get right vector
 
 
             Vector3 input = forwardMoveDirection * vertical + rightMoveDirection * horizontal;
             input = input.magnitude > 1 ? input.normalized : input;
-            if(input.magnitude > 0 && CheckIfCanMove(input.normalized)) spider.position += input * speed * Time.deltaTime;
+            if(input.magnitude > 0 && CheckIfCanMove(input.normalized)) spider.position += input * speed * Time.deltaTime; // Normalize to not exeed speed if moving diagonal 
         }
 
       
@@ -138,8 +138,8 @@ public class IKMovment : MonoBehaviour
         TranslatePoitns();
         MoveLegsTargetPosition();
         MoveBodyTargetPosition();
-        spider.up = Vector3.SmoothDamp(spider.up, desiredRotation, ref velocity, smoothTime);
-        spider.position = Vector3.SmoothDamp(spider.position, desiredPosition, ref velocity, smoothTime);
+        spider.up = Vector3.SmoothDamp(spider.up, desiredRotation, ref velocity, smoothTime); // rotate spider smoothly 
+        spider.position = Vector3.SmoothDamp(spider.position, desiredPosition, ref velocity, smoothTime); // move spider smoothly
         CalculateLegsPosition();
         CalculateIK();
         SetLegPosition();
@@ -151,9 +151,9 @@ public class IKMovment : MonoBehaviour
 
     [SerializeField]
     float colliderRadius;
-    private bool CheckIfCanMove(Vector3 dir)
+    private bool CheckIfCanMove(Vector3 dir) // prevent spider from walking into walls 
     {
-        RaycastHit hit;
+        RaycastHit hit; 
         if(Physics.Raycast(spider.position, dir, out hit, colliderRadius))
         {
             return false;
@@ -176,14 +176,14 @@ public class IKMovment : MonoBehaviour
             legs[legNumber].bones[0] = legs[legNumber].translatedRoot;
             Vector3 dist = Vector3.zero;
 
-            for (int i = 1; i < legs[legNumber].bones.Length; i++)
+            for (int i = 1; i < legs[legNumber].bones.Length; i++) //set up all joints in desired length
             {
                 legs[legNumber].bones[i] = legs[legNumber].translatedRoot + dir * legs[legNumber].bonesLength[i - 1] + dist;
                 dist += dir * legs[legNumber].bonesLength[i - 1];
             }
             legs[legNumber].allLength = dist.magnitude;
 
-            for(int i = 0; i < legs[legNumber].bonesLength.Length; i++)
+            for(int i = 0; i < legs[legNumber].bonesLength.Length; i++) // instantiate all bones
             {
                 GameObject temp = Instantiate(segmentPrefab, transform.position, quaternion.identity);
                 legsParts.Add(temp.GetComponent<SegmentHeat>());
@@ -192,14 +192,14 @@ public class IKMovment : MonoBehaviour
                 legs[legNumber].desirePosInWorld = legs[legNumber].bones[i] + spider.position;
             }
 
-            for (int i = 0; i < legs[legNumber].bonesLength.Length; i++)
+            for (int i = 0; i < legs[legNumber].bonesLength.Length; i++) // instantiate all joints
             {
                 GameObject temp = Instantiate(kneePrefab, transform.position, quaternion.identity);
                 legsParts.Add(temp.GetComponent<SegmentHeat>());
                 legs[legNumber].knees[i] = temp.transform;
             }
 
-            GameObject tempFeet = Instantiate(footPrefab, transform.position, quaternion.identity);
+            GameObject tempFeet = Instantiate(footPrefab, transform.position, quaternion.identity); // instantiate foot
             legsParts.Add(tempFeet.GetComponent<SegmentHeat>());
             legs[legNumber].feet = tempFeet.transform;
 
@@ -210,7 +210,7 @@ public class IKMovment : MonoBehaviour
 
     private void TranslatePoitns()
     {
-        for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
+        for (int legNumber = 0; legNumber < legs.Length; legNumber++) // translate points into local space from world space
         {
             legs[legNumber].translatedDesiredPos = spider.TransformPoint(legs[legNumber].desiredPos) - spider.position;
             legs[legNumber].translatedRoot = spider.TransformPoint(legs[legNumber].root) - spider.position;
@@ -219,35 +219,37 @@ public class IKMovment : MonoBehaviour
 
     private void MoveLegsTargetPosition()
     {
-        for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
+        for (int legNumber = 0; legNumber < legs.Length; legNumber++) 
         {
 
             RaycastHit hit;
             Vector3 posFromCenterOfSphere = Vector3.positiveInfinity;
             if (Physics.Raycast(legs[legNumber].translatedDesiredPos + spider.position, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
             {
-                posFromCenterOfSphere = hit.point;
+                posFromCenterOfSphere = hit.point; // get point to calculate distance from
             }
 
 
+            // get candidate foot position
             Vector3 nextStep = posFromCenterOfSphere - legs[legNumber].desirePosInWorld;
             nextStep = nextStep.normalized * legs[legNumber].maxAcceptableLegDistanceFromDesire * 0.7f;
             Vector3 normailzedMovment = new Vector3(Mathf.Abs(movmentAxis.x), Mathf.Abs(movmentAxis.y), Mathf.Abs(movmentAxis.z)).normalized;
-            nextStep = legs[legNumber].translatedDesiredPos + Vector3.Scale(nextStep, normailzedMovment); ; //new Vector3(nextStep.x * normailzedMovment.x, nextStep.y * normailzedMovment.y, nextStep.z * normailzedMovment.z);
+            nextStep = legs[legNumber].translatedDesiredPos + Vector3.Scale(nextStep, normailzedMovment); ; 
             nextStep = nextStep + spider.position;
 
             Debug.DrawLine(nextStep, nextStep + spider.up, Color.red);
 
-            if(!legs[legNumber - 1 >= 0 ? legNumber - 1 : legs.Length - 1].isMoving && !legs[legNumber + 1 < legs.Length ? legNumber + 1 : 0].isMoving)
-            if (Vector3.Distance(legs[legNumber].desirePosInWorld, posFromCenterOfSphere) > legs[legNumber].maxAcceptableLegDistanceFromDesire 
-                || legs[legNumber].allLength < Vector3.Distance(legs[legNumber].translatedRoot, legs[legNumber].desirePosInWorld - spider.position)
-                || Vector3.Distance(legs[legNumber].translatedDesiredPos, hit.point) < desireHeigth * 0.5f)
+            
+            if(!legs[legNumber - 1 >= 0 ? legNumber - 1 : legs.Length - 1].isMoving && !legs[legNumber + 1 < legs.Length ? legNumber + 1 : 0].isMoving) // if next and previous legs are not moving
+                if (Vector3.Distance(legs[legNumber].desirePosInWorld, posFromCenterOfSphere) > legs[legNumber].maxAcceptableLegDistanceFromDesire  // if foot is too far from body 
+                || legs[legNumber].allLength < Vector3.Distance(legs[legNumber].translatedRoot, legs[legNumber].desirePosInWorld - spider.position) 
+                || Vector3.Distance(legs[legNumber].translatedDesiredPos, hit.point) < desireHeigth * 0.5f) // or foot is too clos to body
             {
-                if (posFromCenterOfSphere != Vector3.positiveInfinity)  
-                {
-                    if (Physics.Raycast(nextStep, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity)) //legs[legNumber].desiredPos + spider.position
+                if (posFromCenterOfSphere != Vector3.positiveInfinity)  // if there is a floor underneath
                     {
-                        if(Vector3.Distance(hit.point, legs[legNumber].translatedRoot + spider.position) <= legs[legNumber].allLength)
+                    if (Physics.Raycast(nextStep, spider.TransformDirection(Vector3.down), out hit, Mathf.Infinity)) // check if there is any ground under next step
+                    {
+                        if(Vector3.Distance(hit.point, legs[legNumber].translatedRoot + spider.position) <= legs[legNumber].allLength) // check if next step is reachable 
                         {
                             legs[legNumber].currentPosition = legs[legNumber].desirePosInWorld;
                             legs[legNumber].startPosition = legs[legNumber].desirePosInWorld;
@@ -260,7 +262,7 @@ public class IKMovment : MonoBehaviour
                         }
                     }
                 }
-                if(Physics.Raycast(nextStep, (spider.TransformDirection(Vector3.down) + rayCastLeanOffset), out hit, Mathf.Infinity))
+                if(Physics.Raycast(nextStep, (spider.TransformDirection(Vector3.down) + rayCastLeanOffset), out hit, Mathf.Infinity)) // check if there is any ground under spider at an angle (to allow walking over hills)
                 {
                     if (Vector3.Distance(hit.point, legs[legNumber].translatedRoot + spider.position) <= legs[legNumber].allLength)
                     {
@@ -290,20 +292,18 @@ public class IKMovment : MonoBehaviour
         for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenia wykonywane s¹ dla ka¿dej nogi osobno
         {
             Vector3 down = -spider.up;
-            Vector3 myHeigth = Vector3.Project(spider.position - legs[legNumber].desirePosInWorld, spider.up);
+            Vector3 myHeigth = Vector3.Project(spider.position - legs[legNumber].desirePosInWorld, spider.up); // vector up
             heigth += myHeigth;
-           // Debug.DrawLine(legs[legNumber].desirePosInWorld, myHeigth + legs[legNumber].desirePosInWorld, Color.magenta);
 
             #region rotatnion
             Vector3 firstLeg = legs[legNumber + 2 > legs.Length - 1 ? legNumber + 2 - legs.Length : legNumber + 2].desirePosInWorld;
             Vector3 secondLeg = legs[legNumber + 1 > legs.Length - 1 ? 0 : legNumber + 1].desirePosInWorld;
             Vector3 thirdLeg = legs[legNumber].desirePosInWorld;
-            Vector3 vectorUp = Vector3.Cross(secondLeg - firstLeg, thirdLeg - firstLeg);
+            Vector3 vectorUp = Vector3.Cross(secondLeg - firstLeg, thirdLeg - firstLeg); // get vectors from 3 legs and calculate up vector
             rotation += vectorUp.normalized;
 
-            rotationLean += spider.position - legs[legNumber].desirePosInWorld;
+            rotationLean += spider.position - legs[legNumber].desirePosInWorld; // calculate angle to cast ray when walking over terrain
 
-            // Debug.DrawLine(firstLeg, firstLeg + vectorUp.normalized * 1, Color.green);
             #endregion
         }
 
@@ -329,6 +329,7 @@ public class IKMovment : MonoBehaviour
             float t = (Time.time - legs[legNumber].moveStartTime) / legs[legNumber].moveDuration;
             if(legs[legNumber].isMoving)
             {
+                // Use bezier curves to interpolate feet position
                 if(t <= 1) legs[legNumber].currentPosition = Mathf.Pow((1 - t), 2) * legs[legNumber].startPosition + 2*(1-t)*t* legs[legNumber].moveInterpolationPoint + Mathf.Pow(t, 2) * legs[legNumber].desirePosInWorld;
                 else legs[legNumber].isMoving = false;
             }
@@ -339,7 +340,7 @@ public class IKMovment : MonoBehaviour
     {
         for (int legNumber = 0; legNumber < legs.Length; legNumber++) // Obliczenaia wykonywane s¹ dla ka¿dej nogi osobno
         {
-            //  Jeœli odleg³oœæ od celu jest wiêksza ni¿ d³ugoœæ nogi obliczamy kierunek w którym powinna byæ wyci¹gniêta a nastêpnie ustawiamy koœci prosto w kierunku celu z wyj¹tkiem pierwszej, która jest translatedRootem
+            //  If desired leg position is further than reachable, then streach leg to it 
             if (Vector3.Magnitude((legs[legNumber].currentPosition - spider.position) - legs[legNumber].translatedRoot) > legs[legNumber].allLength) 
             {
                 Vector3 dir = ((legs[legNumber].currentPosition - spider.position) - legs[legNumber].translatedRoot).normalized;
@@ -357,21 +358,23 @@ public class IKMovment : MonoBehaviour
             {
                 for (int iterationsCount = 0; iterationsCount < iterations; iterationsCount++)
                 {
-                    legs[legNumber].bones[legs[legNumber].bones.Length - 1] = legs[legNumber].currentPosition - spider.position;
+                    legs[legNumber].bones[legs[legNumber].bones.Length - 1] = legs[legNumber].currentPosition - spider.position; // set feet at destination
 
-                    for(int boneIndex = legs[legNumber].bones.Length - 2; boneIndex >= 0; boneIndex--) //back
+                    for(int boneIndex = legs[legNumber].bones.Length - 2; boneIndex >= 0; boneIndex--) // going backwards calculate next joint
                     {
                         legs[legNumber].bones[boneIndex] = legs[legNumber].bones[boneIndex + 1] + (legs[legNumber].bones[boneIndex] - legs[legNumber].bones[boneIndex + 1]).normalized * legs[legNumber].bonesLength[boneIndex];
                     }
 
                     
-                    legs[legNumber].bones[0] = legs[legNumber].translatedRoot;
+                    legs[legNumber].bones[0] = legs[legNumber].translatedRoot; // set last joint at root point
 
-                    for (int boneIndex = 1; boneIndex < legs[legNumber].bones.Length - 1; boneIndex++) // forward
+                    for (int boneIndex = 1; boneIndex < legs[legNumber].bones.Length - 1; boneIndex++) // going forward calculate next joint
                     {
                         legs[legNumber].bones[boneIndex] = legs[legNumber].bones[boneIndex - 1] + (legs[legNumber].bones[boneIndex] - legs[legNumber].bones[boneIndex - 1]).normalized * legs[legNumber].bonesLength[boneIndex - 1];
                     }
 
+
+                    //check if distance from foot to destinatnion is acceptable 
                     if (Vector3.Distance(legs[legNumber].bones[legs[legNumber].bones.Length - 1], (legs[legNumber].currentPosition - spider.position)) < delta) break;
 
                 }
@@ -385,16 +388,16 @@ public class IKMovment : MonoBehaviour
         {
             for (int i = 0; i < legs[legNumber].segments.Length; i++)
             {
-                legs[legNumber].segments[i].position = legs[legNumber].bones[i] + spider.position;
-                legs[legNumber].segments[i].rotation = Quaternion.LookRotation((legs[legNumber].bones[i] - legs[legNumber].bones[i + 1]), Vector3.up);
+                legs[legNumber].segments[i].position = legs[legNumber].bones[i] + spider.position; // set bone postion
+                legs[legNumber].segments[i].rotation = Quaternion.LookRotation((legs[legNumber].bones[i] - legs[legNumber].bones[i + 1]), Vector3.up); // set bone rotation
             }
 
             for (int i = 0; i < legs[legNumber].segments.Length; i++)
             {
-                legs[legNumber].knees[i].position = legs[legNumber].bones[i] + spider.position;
+                legs[legNumber].knees[i].position = legs[legNumber].bones[i] + spider.position; // set joint postion
             }
 
-            legs[legNumber].feet.position = legs[legNumber].bones[legs[legNumber].segments.Length] + spider.position;
+            legs[legNumber].feet.position = legs[legNumber].bones[legs[legNumber].segments.Length] + spider.position; // set foot position and rotation
             legs[legNumber].feet.rotation = Quaternion.LookRotation((legs[legNumber].bones[legs[legNumber].segments.Length - 1] - legs[legNumber].bones[legs[legNumber].segments.Length]), Vector3.up);
         }
     }
