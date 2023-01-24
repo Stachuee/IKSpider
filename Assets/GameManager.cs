@@ -33,13 +33,18 @@ public class GameManager : MonoBehaviour
         playerAlive = true;
     }
 
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
     private void Update()
     {
         if(Input.GetKeyDown(KeyCode.Escape))
         {
-            pause = !pause;
-            pauseMenu.SetActive(pause);
+            PauseGame();
         }
+        Debug.Log(Cursor.lockState);
     }
 
     public void ResetGame()
@@ -58,6 +63,14 @@ public class GameManager : MonoBehaviour
     {
         pause = !pause;
         pauseMenu.SetActive(pause);
+        if (!pause)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Confined;
+        }
     }
 
     public void ExitGame()
@@ -67,6 +80,7 @@ public class GameManager : MonoBehaviour
 
     public void Win()
     {
+        Cursor.lockState = CursorLockMode.Confined;
         TimeSpan timeSpan = TimeSpan.FromSeconds(TargetCounter.time);
         string timeText = string.Format("{0:D2}:{1:D2}:{2:D2}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds);
         endTimer.text = timeText;
